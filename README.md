@@ -1,8 +1,8 @@
-# SETTING UP REPOSITORY AND ENVIRONMENT
+# SETTING UP A CLONE OF THIS REPOSITORY AND YOUR VIRTUAL ENVIRONMENT
 
 1. Create a new GitHub repository (repo).
-2. Copy repo https url to clipboard.
-3. Clone the repo by running this line in your terminal after navigating to the desired working directory:
+2. Copy **this** repo https url to clipboard.
+3. Clone this repo by running this line in your terminal after navigating to the desired working directory:
 ```git clone <https url>```
 4. Create a virtual environment named 'hw7_forecast' by running this line in your terminal:
 ```python -m venv hw7_forecast```
