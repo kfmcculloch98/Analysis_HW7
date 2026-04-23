@@ -4,12 +4,25 @@
 2. Copy **this** repo https url to clipboard.
 3. Clone this repo by running this line in your terminal after navigating to the desired working directory:
 ```git clone <https url>```
-4. Create a virtual environment named 'hw7_forecast' by running this line in your terminal:
+
+# SETTING VIRTUAL ENVIRONMENT (LOCAL)
+
+1. Create a virtual environment named 'hw7_forecast' by running this line in your terminal:
 ```python -m venv hw7_forecast```
-5. Activate the environment by running these two lines:
+2. Activate the environment by running these two lines:
 ```Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser```
 ```.\hw7_forecast\Scripts\activate```
-7. Copy over requirements.txt then run:
+3. Copy over requirements.txt then run:
 ```pip install -r requirements.txt```
-8. Run this if you install additional libraries:
+4. Run this if you install additional libraries:
+```pip freeze > requirements.txt```
+
+# SETTING VIRTUAL ENVIRONMENT (CODESPACE)
+1. Create a virtual environment by running this line in the bash terminal:
+```python -m venv .venv```
+2. Activate the environment by running this line:
+```source .venv/bin/activate```
+3. Copy over requirements.txt then run:
+```pip install -r requirements.txt```
+4. Run this if you install additional libraries:
 ```pip freeze > requirements.txt```
