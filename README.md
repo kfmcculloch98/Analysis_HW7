@@ -1,11 +1,11 @@
-# SETTING UP A CLONE OF THIS REPOSITORY AND YOUR VIRTUAL ENVIRONMENT
+# HOW TO CREATE A CLONE OF THIS REPOSITORY
 
 1. Create a new GitHub repository (repo).
 2. Copy **this** repo https url to clipboard.
 3. Clone this repo by running this line in your terminal after navigating to the desired working directory:
 ```git clone <https url>```
 
-# SETTING VIRTUAL ENVIRONMENT (LOCAL)
+# HOW TO SET UP A VIRTUAL ENVIRONMENT (LOCAL)
 
 1. Create a virtual environment named 'hw7_forecast' by running this line in your terminal:
 ```python -m venv hw7_forecast```
@@ -17,7 +17,8 @@
 4. Run this if you install additional libraries:
 ```pip freeze > requirements.txt```
 
-# SETTING VIRTUAL ENVIRONMENT (CODESPACE)
+# HOW TO SET UP A VIRTUAL ENVIRONMENT (CODESPACE)
+
 1. Create a virtual environment by running this line in the bash terminal:
 ```python -m venv .venv```
 2. Activate the environment by running this line:
