@@ -10,10 +10,13 @@ Run via run_workflow.sh, or directly:
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import hf_hydrodata
 from forecast_functions import (
     get_recent_data,
     make_5day_forecast_longterm,
+    make_5day_forecast_monthly,
+    make_5day_forecast_markov,
     load_model,
 )
 
@@ -23,7 +26,7 @@ parser.add_argument('--pin',           required=True)
 parser.add_argument('--gauge-id',      default='09506000')
 parser.add_argument('--ar-order',      type=int, default=7)
 parser.add_argument('--forecast-date', default='2024-04-30')
-parser.add_argument('--model',         default='longterm_avg', choices=['longterm_avg'])
+parser.add_argument('--model',         default='longterm_avg', choices=['longterm_avg', 'monthly_avg', 'markov'])
 args = parser.parse_args()
 
 forecast_date_ts = pd.Timestamp(args.forecast_date)
@@ -46,6 +49,36 @@ if args.model == 'longterm_avg':
     forecast_df = make_5day_forecast_longterm(mean_flow, args.forecast_date)
     model_label = 'Long-term Average'
 
+# ── Monthly average model ────────────────────────────────────────────────────
+elif args.model == 'monthly_avg':
+    print("\n--- Step 2: Load monthly average model ---")
+    mean_flow = load_model()
+    if not isinstance(mean_flow, dict):
+        raise TypeError(
+            "saved_model.pkl does not contain a monthly_avg model. "
+            "Re-run train_model.py with --refit True --model monthly_avg first."
+        )
+    print("\n--- Step 3: Generate 5-day monthly average forecast ---")
+    forecast_start = pd.to_datetime(args.forecast_date) + pd.Timedelta(days=1)
+    forecast_df = make_5day_forecast_monthly(mean_flow, forecast_start)
+    model_label = 'Monthly Average'
+
+# ── Markov chain model ────────────────────────────────────────────────────
+elif args.model == 'markov':
+    print("\n--- Step 2: Load Markov model ---")
+    model_dict = load_model()
+    if not isinstance(model_dict, dict) or 'matrix' not in model_dict:
+        raise TypeError(
+            "saved_model.pkl does not contain a markov model. "
+            "Re-run train_model.py with --refit True --model markov first."
+        )
+    print("\n--- Step 3: Generate 5-day Markov Chain forecast ---")
+    # Seed the Markov chain with 'recent' (the current state) 
+    forecast_start = pd.to_datetime(args.forecast_date)
+    forecast_df = make_5day_forecast_markov(model_dict, recent, forecast_start)
+    model_label = 'Markov Chain'
+
+
 print(f"\n  5-Day Streamflow Forecast — Verde River ({model_label})")
 print(f"  Starting: {forecast_date_ts.date()}\n")
 print(f"  {'Date':<14}  Forecast (cfs)")
@@ -64,6 +97,9 @@ ax.axvline(forecast_date_ts, color='gray', linestyle=':', linewidth=1.2)
 ax.set_yscale('log')
 ax.set_ylabel('Streamflow (cfs)')
 ax.set_title(f'Verde River 5-Day Forecast  |  Starting {forecast_date_ts.date()}  ({model_label})')
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.xticks(rotation=45)
 ax.legend()
 plt.tight_layout()
 plt.savefig('forecast_plot.png', dpi=150, bbox_inches='tight')

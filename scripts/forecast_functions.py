@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 import hf_hydrodata
-
+import matplotlib.dates as mdates
 
 def get_training_test_data(gauge_id, train_start, train_end, test_start, test_end):
     """
@@ -86,17 +86,24 @@ def get_recent_data(gauge_id, forecast_date, ar_order):
         )
     return df
 
-
 def fit_longterm_avg_model(train_df):
     """Return the mean streamflow (cfs) over the entire training period."""
     return float(train_df['streamflow_cfs'].mean())
 
+def fit_monthly_avg_model(train_df):
+    """Return the mean streamflow (cfs) over the entire training period."""
+    return train_df.groupby(train_df.index.month)['streamflow_cfs'].mean().to_dict()
 
 def make_5day_forecast_longterm(mean_flow, forecast_date, n_days=5):
     """Return DataFrame with the long-term mean flow for every forecast day."""
     dates = pd.date_range(start=forecast_date, periods=n_days, freq='D')
     return pd.DataFrame({'Forecast_cfs': mean_flow}, index=dates)
 
+def make_5day_forecast_monthly(monthly_means, forecast_date, n_days=5):
+    """Return DataFrame with the monthly mean flow for every forecast month."""
+    dates = pd.date_range(start=forecast_date, periods=n_days, freq='D')
+    mean_flow = [monthly_means[d.month] for d in dates]
+    return pd.DataFrame({'Forecast_cfs': mean_flow}, index=dates) 
 
 def compute_metrics(observed_cfs, predicted_cfs):
     """Return dict with RMSE, R², and NSE (Nash-Sutcliffe Efficiency)."""
@@ -151,19 +158,77 @@ def plot_validation(train_cfs, test_cfs, forecast_cfs, metrics, model_label,
     )
     axes[1].legend()
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=7))
+    axes[0].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    plt.xticks(rotation=45)
     print(f"  Plot saved to {save_path}")
     plt.show()
-
 
 def save_model(model, path='saved_model.pkl'):
     with open(path, 'wb') as f:
         pickle.dump(model, f)
     print(f"  Model saved to {path}")
 
-
 def load_model(path='saved_model.pkl'):
     with open(path, 'rb') as f:
         model = pickle.load(f)
     print(f"  Model loaded from {path}")
     return model
+
+def fit_markov_model(train_df, n_states=5):
+    """
+    Returns a dict containing the transition matrix, the state boundaries (bins),
+    and the median log_flow for each state to use as the forecast value.
+    """
+    df = train_df.copy()
+    # Define states based on quantiles (e.g., 0-20th percentile = State 0)
+    df['state'], bins = pd.qcut(df['log_flow'], q=n_states, labels=False, retbins=True)
+    
+    # Calculate the transition matrix (i.e., State today becomes State tomorrow)
+    df['next_state'] = df['state'].shift(-1)
+    t_matrix = pd.crosstab(df['state'], df['next_state'], normalize='index')
+    
+    # Calculate the median log_flow per state to use for back-transforming to cfs
+    state_medians = df.groupby('state')['log_flow'].median().to_dict()
+    
+    return {
+        'matrix': t_matrix,
+        'bins': bins,
+        'medians': state_medians
+    }
+
+def make_5day_forecast_markov(model_dict, recent_df, forecast_date, n_days=5):
+    """
+    Predicts next states by picking the most probable transition from the matrix.
+    """
+    matrix = model_dict['matrix']
+    bins = model_dict['bins']
+    medians = model_dict['medians']
+    
+    # Determine today's state based on the most recent observation
+    last_log_flow = recent_df['log_flow'].iloc[-1]
+    # Digitize finds which bin the value falls into
+    current_state = np.digitize([last_log_flow], bins)[0] - 1
+    # Clamp state to valid range
+    current_state = max(0, min(current_state, len(matrix) - 1))
+    
+    forecast_dates = pd.date_range(start=forecast_date, periods=n_days, freq='D')
+    forecast_values = []
+    
+    for _ in range(n_days):
+        if current_state in matrix.index:
+            # Get probabilities for the current state from the transition matrix
+            probs = matrix.loc[current_state]
+            # Sample using the probabilities in that row
+            next_state = np.random.choice(probs.index, p=probs.values)
+        else:
+            next_state = current_state
+            
+        # Convert state back to CFS: exp(median_log_flow) - 1
+        val_cfs = np.exp(medians[next_state]) - 1
+        forecast_values.append(val_cfs)
+        
+        # Update current state for the next day in the loop
+        current_state = next_state
+        
+    return pd.DataFrame({'Forecast_cfs': forecast_values}, index=forecast_dates)
