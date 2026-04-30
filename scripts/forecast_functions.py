@@ -6,6 +6,7 @@ Helper functions shared by train_model.py and generate_forecast.py.
 
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import pickle
 import hf_hydrodata
@@ -162,7 +163,7 @@ def plot_validation(train_cfs, test_cfs, forecast_cfs, metrics, model_label,
     axes[0].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     plt.xticks(rotation=45)
     print(f"  Plot saved to {save_path}")
-    plt.show()
+    #plt.show()
 
 def save_model(model, path='saved_model.pkl'):
     with open(path, 'wb') as f:

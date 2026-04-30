@@ -9,6 +9,7 @@ Run via run_workflow.sh, or directly:
 
 import argparse
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import hf_hydrodata
@@ -104,4 +105,4 @@ ax.legend()
 plt.tight_layout()
 plt.savefig('forecast_plot.png', dpi=150, bbox_inches='tight')
 print("  Plot saved to forecast_plot.png")
-plt.show()
+#plt.show()

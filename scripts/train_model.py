@@ -35,6 +35,8 @@ parser.add_argument('--test-end',    default='2024-12-31')
 parser.add_argument('--model',       default='longterm_avg', choices=['longterm_avg', 'monthly_avg', 'markov'])
 parser.add_argument('--refit',       default='True')
 parser.add_argument('--validate',    default='True')
+parser.add_argument('--n-states', type=int, default=5, help='Number of states for Markov Chain')
+args = parser.parse_args()
 args = parser.parse_args()
 
 REFIT_MODEL    = args.refit.lower()    == 'true'
@@ -118,10 +120,10 @@ elif args.model == 'monthly_avg':
         )
 
 elif args.model == 'markov':
-    print("\n--- Step 2: Fit Markov Chain model ---")
+    print(f"\n--- Step 2: Fit Markov Chain model with {args.n_states} states ---")
     if REFIT_MODEL or not os.path.exists('saved_model.pkl'):
         # Passing new moddel_dict (containing probability matrix, bins, and medians) instead of mean_flow 
-        model_dict = fit_markov_model(train, n_states=5)
+        model_dict = fit_markov_model(train, n_states=args.n_states)
         save_model(model_dict)
     else:
         model_dict = load_model()
