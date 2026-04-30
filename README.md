@@ -28,15 +28,14 @@
 4. Run this if you install additional libraries:
 ```pip freeze > requirements.txt```
 
-# How to Run a Shell Script on a Local PC
+# How to Run The Model on a Local PC
 
-1. Run the script by running this line:
-```bash run_workflow.sh``` or
-```wsl ./run_workflow.sh```
+1. Run the script by running these two line:
+```Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process```
+```.\run_workflow.ps1```
+2. Follow the prompts for user input.
 
-3. Follow the prompts for user input.
-
-# How to Run a Shell Script on a Codespace
+# How to Run The Shell Script on a Codespace
 
 1. Make the script executable by running line in the bash terminal:
 ```chmod +x run_workflow.sh```
@@ -44,4 +43,15 @@
 ```./run_workflow.sh```
 3. Follow the prompts for user input.
 
+# Model Descriptions
 
+### Long-term Average: ###
+Calculates a single average for the entire training period. It predicts the same value for every day, regardless of the season or current weather.
+
+### Monthly Average: ###
+
+Calculates an average for each month of the year. 
+
+### Markov Chain: ###
+
+Groups streamflow into a user-specified number of "states" (e.g., Low, Med, High) and predicts the future by picking the most likely next state based on the current streamflow conditions.
