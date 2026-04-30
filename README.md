@@ -27,3 +27,21 @@
 ```pip install -r requirements.txt```
 4. Run this if you install additional libraries:
 ```pip freeze > requirements.txt```
+
+# How to Run a Shell Script on a Local PC
+
+1. Run the script by running this line:
+```bash run_workflow.sh``` or
+```wsl ./run_workflow.sh```
+
+3. Follow the prompts for user input.
+
+# How to Run a Shell Script on a Codespace
+
+1. Make the script executable by running line in the bash terminal:
+```chmod +x run_workflow.sh```
+2. Run the script by running this line:
+```./run_workflow.sh```
+3. Follow the prompts for user input.
+
+
